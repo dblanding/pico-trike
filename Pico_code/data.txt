@@ -1,0 +1,17 @@
+-------------------------------		4/4/24
+Lat: 28.924631	Lon: -81.969627		garage corner
+Lat: 28.924711	Lon: -81.969688		d/w corner S
+Lat: 28.924759	Lon: -81.969643		d/w corner N
+Lat: 28.924797	Lon: -81.969826		Santana circle mhc
+Lat: 28.924803	Lon: -81.970512		Santana-Carrera mhc
+Lat: 28.925573	Lon: -81.970528		SanLuis-Carrera mhc
+Lat: 28.925581	Lon: -81.969910		SanLuis circle mhc
+-------------------------------		4/5/24
+Lat: 28.924681	Lon: -81.969604		d/w cntr
+Lat: 28.924789	Lon: -81.969818		Santana circle mhc
+Lat: 28.924797	Lon: -81.970497		Santana-Carrera mhc
+Lat: 28.924025	Lon: -81.970512		Garza-Carrera mhc
+Lat: 28.924801	Lon: -81.970520		Santana-Carrera mhc
+Lat: 28.924812	Lon: -81.969826		Santana circle mhc
+Lat: 28.924707	Lon: -81.969627		d/w cntr
+-------------------------------
