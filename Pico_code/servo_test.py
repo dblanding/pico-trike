@@ -2,9 +2,9 @@ from machine import Pin,PWM
 import utime
 
 STEP = 100_000
-MIN = 900_000
+MIN = 1_100_000
 MID = 1_500_000
-MAX = 2_100_000
+MAX = 1_900_000
 
 pwm = PWM(Pin(15))
 
