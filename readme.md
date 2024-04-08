@@ -52,10 +52,13 @@
         * A **Northing** value (meters) is calculated from the latitude of any other location.
             * Measuring the Earth's circumference **C** in a longitudinal direction allows us to come up with a pretty simple relationship between latitude and Northing distance that holds true everywhere.
         * An **Easting** value (meters) is calculated from the longitude of any other location.
-            * This isn't as simple. At the equator, you would have to travel a great distance East or West to get back to where you started, but if you are near one of the poles, you only have to travel a much shorter distance to get back to your starting point. So you have to know your latitude in order to know the distance around the world in the E/W direction.
+            * This isn't as simple. It also depends on  your latitude. At the equator, you would have to travel a great distance East or West to go 360 degrees and get back to where you started, but if you are near one of the poles, you only have to travel a much shorter distance to get back to your starting point. So you have to know your latitude in order to know the distance around the world in the E/W direction.
     3. Finally, we get our desired X/Y coordinate frame by rotating the Easting/Northing map 148 degrees CCW about the origin..
-## Next up: We need to come up with a steering algorithm
+## Test drive: Devise a simple steering algorithm
 
+![Simple triangular loop in driveway](imgs/driveway_loop.png)
+
+## Online research: "Path following & steering"
 * This [path folowing video tutorial](https://www.youtube.com/watch?v=2qGsBClh3hE) shows (at 7:00) a nice animation of a path following algorithm credited to [Craig Reynolds](https://www.red3d.com/cwr/steer/)
 
 ![Path Following Animation](imgs/path-following.png)

@@ -1,15 +1,25 @@
-from machine import Pin, UART
+from machine import Pin, UART, PWM
 import utime
 from bno08x_rvc import BNO08x_RVC, RVCReadTimeoutError
 from micropyGPS import MicropyGPS
+
+# Servo position values
+MIN = 1_100_000
+MID = 1_500_000
+MAX = 1_900_000
+
+# Set up servo pin
+pwm = PWM(Pin(15))
+pwm.freq(50)
+pwm.duty_ns(MID)  # Send servo to MID position
 
 # Initialize IMU module
 uart = UART(0, 115200, tx=Pin(16), rx=Pin(17))
 rvc = BNO08x_RVC(uart)
 
 # Initialize GPS module
-gps_module = UART(1, baudrate=9600, tx=Pin(4), rx=Pin(5))
-time_zone = -3
+gps_module = UART(1, baudrate=9600, tx=Pin(20), rx=Pin(21))
+time_zone = -5
 gps = MicropyGPS(time_zone)
 
 def convert_coordinates(sections):
@@ -29,31 +39,27 @@ def convert_coordinates(sections):
     return str(data)
 
 loop_count = 0
-try:
-    while True:
-        loop_count += 1
-        try:
-            yaw, *rest = rvc.heading
-        except RVCReadTimeoutError:
-            yaw = None
 
-        if loop_count == 10:
-            loop_count = 0
-            length = gps_module.any()
-            if length > 0:
-                data = gps_module.read(length)
-                for byte in data:
-                    message = gps.update(chr(byte))
+while True:
+    loop_count += 1
+    try:
+        yaw, *rest = rvc.heading
+    except RVCReadTimeoutError:
+        yaw = None
 
-            latitude = convert_coordinates(gps.latitude)
-            longitude = convert_coordinates(gps.longitude)
+    if loop_count == 10:
+        loop_count = 0
+        length = gps_module.any()
+        if length > 0:
+            data = gps_module.read(length)
+            for byte in data:
+                message = gps.update(chr(byte))
 
-            if latitude is None or longitude is None:
-                continue
-            print(latitude, longitude, yaw)
+        latitude = convert_coordinates(gps.latitude)
+        longitude = convert_coordinates(gps.longitude)
 
-        utime.sleep_ms(10)  # need to go fast to make IMU responsive
-except KeyboardInterrupt:
-    print("\nCtrl-C pressed to exit.")
-finally:
-    uart.deinit()
+        if latitude is None or longitude is None:
+            continue
+        print(latitude, longitude, yaw)
+
+    utime.sleep_ms(10)  # need to go fast to make IMU responsive
