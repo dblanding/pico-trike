@@ -1,14 +1,14 @@
 # drive_trike.py
 
 """
-pseudo_code:
+pseudo_code for multi-leg trip:
 
 GOAL_DIST = 1  # radius (m) considered to be "arrived" at goal, 
 
-Read in waypoints.csv file
-    If first line is 0, 0:
+# Read in waypoints.csv file
+    if first line is 0, 0:
         then it contains (x,y) values (meters)
-    Else:
+    else:
         it contains (lat, lon) values
         Convert them to x, y values
     populate list of waypoints with X, Y values
@@ -17,15 +17,14 @@ Read in waypoints.csv file
 for index in range(len(waypoints) - 1):
     start_pt = waypoints[index]
     goal_pt = waypoints[index + 1]
-    line = (start_pt, goal_pt)
+    curr_pt = (x, y)
+    theta = angle from curr_pt to goal_pt
+    yaw = curr_orientation
+    angle = -theta - yaw
     while dist_to_goal_pt < GOAL_DIST:
-        steer(curr_pose, line, )
+        steer(angle)
 
-def steer(curr_pose, line):
-    # Set steering to keep curr_pt on line and pointed toward goal
-    
-        
-# Add some delay to give IMU & GPS time to get working
+Is delay needed to give IMU & GPS time to get working?
 
 """
 from math import atan2, pi
@@ -85,9 +84,10 @@ def steer(angle):
     pwm_value = int(MID - (GAIN * angle))
     pwm.duty_ns(pwm_value)
 
-# goal_x, goal_y = cc.latlon_to_xy(28.924725, -81.969643)  #d/w N corner
+# goal_x, goal_y = cc.latlon_to_xy(28.924725, -81.969643)  # d/w N corner
 goal_x, goal_y = cc.latlon_to_xy(28.924797, -81.970497)  # mhc Santana & Carrera
-count = 0
+
+loop_count = 0
 while True:
     # Get Latitude & Longitude coordinates
     length = gps_module.any()
@@ -114,10 +114,10 @@ while True:
     except RVCReadTimeoutError:
         yaw = None
 
-    count += 1
+    loop_count += 1
     utime.sleep(0.01)  # looping fast makes IMU respond quickly
-    if count % 10 == 0:  # but we don't need all that data
-        count = 0
+    if loop_count % 10 == 0:  # but we don't need all that data
+        loop_count = 0
         # print("yaw = ", yaw)
         print(theta, yaw)
         if theta is not None:

@@ -1,5 +1,5 @@
 # Solar Trike *Earth Rover* (with R/C steering control)
-* Locomotion powered *Solely* by *Solar*
+* Locomotion powered *solely* by *Solar*
 
 ![R/C Solar Trike](imgs/solar_trike.jpg)
 
@@ -54,9 +54,12 @@
         * An **Easting** value (meters) is calculated from the longitude of any other location.
             * This isn't as simple. It also depends on  your latitude. At the equator, you would have to travel a great distance East or West to go 360 degrees and get back to where you started, but if you are near one of the poles, you only have to travel a much shorter distance to get back to your starting point. So you have to know your latitude in order to know the distance around the world in the E/W direction.
     3. Finally, we get our desired X/Y coordinate frame by rotating the Easting/Northing map 148 degrees CCW about the origin..
-## Test drive: Devise a simple steering algorithm
+
+## Test drive to a goal point
 
 ![Simple triangular loop in driveway](imgs/driveway_loop.png)
+
+* The file [drive_trike.py](Pico_code/drive_trike.py) steers from point 0 (Origin or Home) to a goal point. When the trike drove to the N corner of the driveway, I discovered that the GPS values "bobble" around too much, causing a lot of steering noise along such a short leg. This problem was mitigated by choosing a goal point farther away (eg.: mhc at the end of the street.) 
 
 ## Online research: "Path following & steering"
 * This [path folowing video tutorial](https://www.youtube.com/watch?v=2qGsBClh3hE) shows (at 7:00) a nice animation of a path following algorithm credited to [Craig Reynolds](https://www.red3d.com/cwr/steer/)
