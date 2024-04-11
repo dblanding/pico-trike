@@ -59,7 +59,7 @@
 
 ![Simple triangular loop in driveway](imgs/driveway_loop.png)
 
-* The file [drive_trike.py](Pico_code/drive_trike.py) steers from point 0 (Origin or Home) to a goal point. When the trike drove to the N corner of the driveway, I discovered that the GPS values "bobble" around too much, causing a lot of steering noise along such a short leg. This problem was mitigated by choosing a goal point farther away (eg.: mhc at the end of the street.) 
+* The file [drive_trike.py](Pico_code/drive_trike.py) steers from point 0 (Origin or Home) to a goal point roughly 8 meters away. Driving from the orgin to the N corner of the driveway, the GPS values "bobble" around so much, that it causes the steering to behave very erratically. The robot uses the GPS values to compute its current position, then uses this to find the angle to the goal. At first, I thought this problem could be mitigated by choosing a goal point farther away, but as the robot gets closer to the goal the problem would be the same.
 
 ## Online research: "Path following & steering"
 * This [path folowing video tutorial](https://www.youtube.com/watch?v=2qGsBClh3hE) shows (at 7:00) a nice animation of a path following algorithm credited to [Craig Reynolds](https://www.red3d.com/cwr/steer/)
