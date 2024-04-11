@@ -1,3 +1,5 @@
+# collect_gps_data.py
+
 from machine import Pin, UART
 import utime
 from micropyGPS import MicropyGPS
@@ -14,7 +16,7 @@ gps = MicropyGPS(time_zone)
 button = Pin(5, Pin.IN, Pin.PULL_UP)
 
 # Set up LED indicator -> button pushed
-led = Pin(15, Pin.OUT)
+led = Pin(18, Pin.OUT)
 
 def record(line):
     """Append data to file."""

@@ -33,7 +33,7 @@ def p2r(r, theta):
     return (x, y)
 
 
-class ConvertCoords():
+class Convert_Coords():
     """Utility for converting from Lat, Lon to X, Y coords (meters)."""
 
     def __init__(self, home_lat, home_lon, frame_angle):
@@ -51,7 +51,6 @@ class ConvertCoords():
         northing = (lat - self.home_lat) * METERS_PER_DEG
         easting = (lon - self.home_lon) * METERS_PER_DEG * self.f
         point = (easting, northing)
-        print(point)
 
         # Second: rotate frame from (E, N) to (X, Y)
         r, theta = r2p(easting, northing)  # convert to polar coords

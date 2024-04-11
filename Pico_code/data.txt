@@ -15,3 +15,7 @@ Lat: 28.924801	Lon: -81.970520		Santana-Carrera mhc
 Lat: 28.924812	Lon: -81.969826		Santana circle mhc
 Lat: 28.924707	Lon: -81.969627		d/w cntr
 -------------------------------
+Lat: 28.924652	Lon: -81.969681		Home (initial)
+Lat: 28.924725	Lon: -81.969643		WP#1 d/w corner N
+Lat: 28.924711	Lon: -81.969658		WP#2 d/w corner S
+Lat: 28.924671	Lon: -81.969612		Home
