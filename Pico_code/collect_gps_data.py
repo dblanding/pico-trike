@@ -5,7 +5,7 @@ import utime
 from micropyGPS import MicropyGPS
 
 DATAFILENAME = 'data.txt'
-RECORD_DATA_REQUESTED = False
+DATA_TIME = 1  # time (s) between samples. (On trigger if zero)
 
 # Initialize GPS module
 gps_module = UART(1, baudrate=9600, tx=Pin(20), rx=Pin(21))
@@ -58,9 +58,17 @@ while True:
 
     utime.sleep_ms(100)  # Add a 100ms delay between GPS updates
     
-    if button.value()==0:
-        print("Button Pressed")
+    if DATA_TIME == 0:  # Collect data when triggered
+        if button.value() == 0:
+            print("Button Pressed")
+            led.value(1)
+            utime.sleep(0.1)  # Debounce time
+            led.value(0)
+            record('Lat: ' + latitude + '\t' + 'Lon: ' + longitude)
+
+    else:  # Collect data continuously
         led.value(1)
-        utime.sleep(0.1)  # Debounce time
+        utime.sleep(0.1)  # light ON time
         led.value(0)
-        record('Lat: ' + latitude + '\t' + 'Lon: ' + longitude)
+        record(latitude + ', ' + longitude)
+        utime.sleep(DATA_TIME)
