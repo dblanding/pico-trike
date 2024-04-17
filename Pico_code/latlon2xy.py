@@ -33,7 +33,7 @@ def p2r(r, theta):
     return (x, y)
 
 
-class Convert_Coords():
+class LatLon2XY():
     """Utility for converting from Lat, Lon to X, Y coords (meters)."""
 
     def __init__(self, home_lat, home_lon, frame_angle):
