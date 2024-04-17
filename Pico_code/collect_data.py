@@ -6,8 +6,12 @@ from bno08x_rvc import BNO08x_RVC, RVCReadTimeoutError
 from micropyGPS import MicropyGPS
 from latlon2xy import LatLon2XY
 
+DATAFILENAME = 'data0.txt'
 INITIALIZED = False  # HOME pose initialized in X,Y frame?
 ANGLE = 148  # Angle (deg) from TRUE EAST to X axis of X,Y frame
+
+# set up button to trigger program exit
+button = Pin(5, Pin.IN, Pin.PULL_UP)
 
 # Set up LED indicator -> printing data
 led = Pin('LED', Pin.OUT)
@@ -35,9 +39,21 @@ def convert_coordinates(sections):
         data = -data
     return data
 
+def record(line):
+    """Append data to file."""
+    print(line)
+    line += '\n'
+    with open(DATAFILENAME, 'a') as file:
+        file.write(line)
 
 loop_count = 0
 while True:
+    
+    # Check for Program Exit request
+    if button.value() == 0:
+        print("Exit button pressed")
+        break
+    
     # Get yaw value (degrees)
     try:
         yaw, *rest = rvc.heading
@@ -69,6 +85,8 @@ while True:
             else:
                 x, y = cf.latlon_to_xy(lat, lon)
             print(x, y, yaw, lat, lon, crs, spd)
+            text_data = f"{x}, {y}, {yaw}, {lat}, {lon}, {crs}, {spd}"
+            record(text_data)
             led.value(1)
             utime.sleep(0.1)  # light ON time
             led.value(0)
