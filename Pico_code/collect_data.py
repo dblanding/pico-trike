@@ -1,4 +1,4 @@
-# get_data.py
+# collect_data.py
 
 from machine import Pin, PWM, UART
 import utime
@@ -6,8 +6,8 @@ from bno08x_rvc import BNO08x_RVC, RVCReadTimeoutError
 from micropyGPS import MicropyGPS
 from latlon2xy import LatLon2XY
 
-INITIALIZED = False
-ANGLE = 148  # Angle from EAST to X axis
+INITIALIZED = False  # HOME pose initialized in X,Y frame?
+ANGLE = 148  # Angle (deg) from TRUE EAST to X axis of X,Y frame
 
 # Set up LED indicator -> printing data
 led = Pin('LED', Pin.OUT)
@@ -33,8 +33,8 @@ def convert_coordinates(sections):
         data = -data
     if sections[2] == 'W':
         data = -data
-
     return data
+
 
 loop_count = 0
 while True:
