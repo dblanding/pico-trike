@@ -14,7 +14,7 @@ ANGLE = 148  # Angle (deg) from TRUE EAST to X axis of X,Y frame
 button = Pin(5, Pin.IN, Pin.PULL_UP)
 
 # Set up LED indicator -> printing data
-led = Pin('LED', Pin.OUT)
+led = Pin(22, Pin.OUT)
 
 # Initialize GPS module
 uart1 = UART(1, baudrate=9600, tx=Pin(20), rx=Pin(21))
@@ -41,30 +41,34 @@ def convert_coordinates(sections):
 
 def record(line):
     """Append data to file."""
-    print(line)
     line += '\n'
     with open(DATAFILENAME, 'a') as file:
         file.write(line)
 
 loop_count = 0
 while True:
-    
+    loop_count += 1
+
     # Check for Program Exit request
     if button.value() == 0:
         print("Exit button pressed")
         break
-    
+
     # Get yaw value (degrees)
     try:
         yaw, *rest = rvc.heading
     except RVCReadTimeoutError:
         yaw = None
 
-    loop_count += 1
     utime.sleep(0.01)  # Being in a fast loop makes IMU respond quickly
-    if loop_count == 90:  # Everything else can go in the slow loop
+
+    if loop_count == 10:
+        led.value(0)  # Leave LED on until 10th loop cycle
+
+    if loop_count == 100:  # Everything else can go in the slow loop
+        # Reset loop_count
         loop_count = 0
-        
+
         # Update GPS data
         my_sentence = (str(uart1.readline()))[1:]
         for x in my_sentence:
@@ -76,7 +80,7 @@ while True:
             lon = convert_coordinates(gps.longitude)
             crs = gps.course
             spd = gps.speed[2] * 3600 / 1000  # m/s
-            
+
             if not INITIALIZED:
                 # Initialize X, Y coordinate frame
                 cf = LatLon2XY(lat, lon, ANGLE)
@@ -87,6 +91,5 @@ while True:
             print(x, y, yaw, lat, lon, crs, spd)
             text_data = f"{x}, {y}, {yaw}, {lat}, {lon}, {crs}, {spd}"
             record(text_data)
+            # Turn on LED to signal successful data recording
             led.value(1)
-            utime.sleep(0.1)  # light ON time
-            led.value(0)
