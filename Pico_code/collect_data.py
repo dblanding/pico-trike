@@ -56,7 +56,7 @@ while True:
 
     # Get yaw value (degrees)
     try:
-        yaw, *rest = rvc.heading
+        yaw, *rest = rvc.heading  # yaw increases w/ right turn
     except RVCReadTimeoutError:
         yaw = None
 

@@ -9,7 +9,7 @@ rvc = BNO08x_RVC(uart)
 count = 0
 while True:
     try:
-        yaw, *rest = rvc.heading
+        yaw, pitch, roll, *accels = rvc.heading  # yaw increases turning right
     except RVCReadTimeoutError:
         yaw = None
 
