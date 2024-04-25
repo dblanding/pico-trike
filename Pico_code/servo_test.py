@@ -1,7 +1,7 @@
 from machine import Pin,PWM
 import utime
 
-STEP = 100_000
+STEP = 50_000
 MIN = 1_200_000
 MID = 1_500_000
 MAX = 1_800_000
