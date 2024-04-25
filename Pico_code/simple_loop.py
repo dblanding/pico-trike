@@ -1,4 +1,19 @@
 # simple_loop.py
+"""
+At Power-up, Trike should be positioned square to house, facing street.
+This sets the IMU (yaw=0) along the X-axis
+Next, press button to begin the loop
+Once the LED starts to blink:
+    3D GPS data available
+    Data recording begins
+    Steer toward the target
+    When arrived at target X-coord value:
+        Program exits
+        Data collection stops
+
+But the Trike keeps going because it is solar powered
+So you have to grab it (or give it some shade)
+"""
 
 from math import atan2, pi
 from machine import Pin, PWM, UART
@@ -14,13 +29,14 @@ HOME_LON = -81.969660
 HOME_ANGLE = 148  # Angle (deg) from TRUE EAST to X axis of X,Y frame
 DATAFILENAME = 'data0.txt'
 INITIALIZED = False  # HOME pose initialized in X,Y frame?
+STEERING_GAIN = 2.5  # speed / wheelbase (1 m/s / 0.4 m)
 
 # PWM values for servo
 MIN = 1_200_000
 MID = 1_500_000
 MAX = 1_800_000
 MAX_ANGLE = 20  # degrees
-GAIN = (MAX - MID) / 20
+SERVO_GAIN = (MAX - MID) / 20
 GOAL_DIST = 2  # radius (m) considered to be "arrived" at goal
 
 # set up button to trigger program exit
@@ -68,7 +84,7 @@ def steer(angle):
         angle = MAX_ANGLE
     elif angle < -MAX_ANGLE:
         angle = -MAX_ANGLE
-    pwm_value = int(MID - (GAIN * angle))
+    pwm_value = int(MID - (SERVO_GAIN * angle))
     pwm.duty_ns(pwm_value)
 
 # Wait for button press to start
@@ -88,17 +104,19 @@ while True:
     if button.value() == 0:
         print("Exit button pressed")
         break
-    if x > 12:
+    if x > XT:
         print(f"Reached goal: x = {x} m")
         break
 
-    # Get yaw value (degrees)
+    # Get heading value (degrees)
     try:
-        yaw, *rest = rvc.heading  # yaw increases w/ right turn
+        yaw, *rest = rvc.heading  # yaw (deg) increases w/ right turn
     except RVCReadTimeoutError:
         yaw = None
 
-    utime.sleep(0.01)  # Being in a fast loop makes IMU respond quickly
+    if yaw:
+        hdg_deg = -yaw  # heading (hdg_deg) is + CCW from X-axis
+    utime.sleep(0.01)  # fast loop makes IMU respond quickly
 
     if loop_count == 10:
         led.value(0)  # Leave LED on until 10th loop cycle
@@ -126,13 +144,19 @@ while True:
                 x, y = 0, 0
             else:
                 x, y = cf.latlon_to_xy(lat, lon)
-            alpha = atan2((0 - y), (12 - x)) * 180 / pi
-            steer_deg = alpha + yaw
-            steer(-steer_deg)
-            print(x, y, steer_deg, alpha, yaw) #, lat, lon, crs, spd)
-            text_data = f"{x}, {y}, {steer_deg}, {alpha}, {yaw}"
+
+            # Steering needed to align heading w/ course in 1 sec
+            crs_deg = atan2((0 - y), (12 - x)) * 180 / pi  # course to target
+            steer_deg = (hdg_deg - crs_deg) * STEERING_GAIN  # steering angle (deg)
+            steer(steer_deg)
+
+            # print & record data
+            print(x, y, steer_deg)
+            text_data = f"{x}, {y}, {steer_deg}"
             record(text_data)
+
             # Turn on LED to signal successful data recording
             led.value(1)
 
 led.value(0)
+steer(0)
