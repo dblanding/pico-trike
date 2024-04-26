@@ -6,7 +6,7 @@ Next, press button to begin the loop
 Once the LED starts to blink:
     3D GPS data available
     Data recording begins
-    Steer toward the target
+    Steers toward the target
     When arrived at target X-coord value:
         Program exits
         Data collection stops
@@ -24,12 +24,12 @@ from latlon2xy import LatLon2XY
 
 XH, YH = 0, 0  # X, Y coords of HOME
 XT, YT = 12, 0  # X, Y coordinates of target
-HOME_LAT = 28.924720
+HOME_LAT = 28.924700
 HOME_LON = -81.969660
 HOME_ANGLE = 148  # Angle (deg) from TRUE EAST to X axis of X,Y frame
 DATAFILENAME = 'data0.txt'
 INITIALIZED = False  # HOME pose initialized in X,Y frame?
-STEERING_GAIN = 2.5  # speed / wheelbase (1 m/s / 0.4 m)
+STEERING_GAIN = 0.75
 
 # PWM values for servo
 MIN = 1_200_000
@@ -134,25 +134,31 @@ while True:
         if gps.fix_type == 3:
             lat = convert_coordinates(gps.latitude)
             lon = convert_coordinates(gps.longitude)
-            crs = gps.course
-            spd = gps.speed[2] * 3600 / 1000  # m/s
+            hr, min, sec = gps.timestamp
+            time = f"{hr}:{min}:{sec}"
+            day, mon, yr = gps.date
+            date = f"{mon}/{day}/{yr}"
 
             if not INITIALIZED:
                 # Initialize X, Y coordinate frame
                 cf = LatLon2XY(HOME_LAT, HOME_LON, HOME_ANGLE)
                 INITIALIZED = True
                 x, y = 0, 0
+                record(date)
+                table_header = "Time, X (m), Y (m), Steer (deg)"
+                print(table_header)
+                record(table_header)
             else:
                 x, y = cf.latlon_to_xy(lat, lon)
 
-            # Steering needed to align heading w/ course in 1 sec
+            # Steer to align heading w/ course
             crs_deg = atan2((0 - y), (12 - x)) * 180 / pi  # course to target
             steer_deg = (hdg_deg - crs_deg) * STEERING_GAIN  # steering angle (deg)
             steer(steer_deg)
 
             # print & record data
-            print(x, y, steer_deg)
-            text_data = f"{x}, {y}, {steer_deg}"
+            text_data = f"{time}, {x}, {y}, {steer_deg}"
+            print(text_data)
             record(text_data)
 
             # Turn on LED to signal successful data recording
