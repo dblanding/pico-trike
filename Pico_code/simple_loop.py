@@ -29,7 +29,7 @@ HOME_LON = -81.969660
 HOME_ANGLE = 148  # Angle (deg) from TRUE EAST to X axis of X,Y frame
 DATAFILENAME = 'data0.txt'
 INITIALIZED = False  # HOME pose initialized in X,Y frame?
-STEERING_GAIN = 0.75
+STEERING_GAIN = 0.6
 
 # PWM values for servo
 MIN = 1_200_000
