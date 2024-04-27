@@ -1,10 +1,8 @@
 # Solar Powered *Outdoor* Trike
 * Locomotion powered *solely* by *Solar*
-* Steering control optionally using
+* 2 steering control options:
     * R/C (operator controlled) or
-    * Programmed using GPS & IMU
-        * GPS informs X, Y postion
-        * IMU informs $\theta$-Z orientation
+    * Programmable using GPS & IMU to deduce current pose
 
 ![R/C Solar Trike](imgs/solar_trike.jpg)
 
@@ -12,10 +10,10 @@
 ## Project goal: Replace R/C steering control with pre-programmed (waypoint to waypoint) navigation using an onboard PICO microcontroller
 * Pose data comes from GPS & IMU
 * Pico coordinates everything:
-    * Power comes from an onboard 3S (11.7v) LiPo battery
+    * Power comes from an onboard 3S (11.1v) or 2S (7.4V) LiPo battery
     * Buck converter to (5V)
     * gps (X-Y location)
-    * Bosch BNO08x IMU (theta-Z orientation)
+    * [Bosch BNO08x](https://cdn-learn.adafruit.com/downloads/pdf/adafruit-9-dof-orientation-imu-fusion-breakout-bno085.pdf) IMU ($\theta$-Z orientation)
     * Calculates steering to next waypoint
     * Controls steering servo to follow path to next waypoint.
         * can loop or drive to a destination
@@ -40,19 +38,19 @@
     * Origin of the X-Y coordinates is set at the man-hole cover on Carrera at Garza.
     * Measured values are within a couple meters of map values
  
-## Coordinate Frames
+## Coordinate Frame
 
 ![Coordinate frames](imgs/coord-frames.jpg)
 * It is S.O.P. for a robot in its **Home** position to be located at the **Origin** (0, 0) of the coordinate frame of its **World**, with its own **Local** coordinate frame initially superimposed thereon.
 * Until the robot leaves its Home, it is poised to go forward in the X direction with a theta-Z value = 0.
     * The robot's initial **Pose** is (X, Y, theta-Z) = (0, 0, 0).
-* It is convenient for our robot's **Home** position to be centered in the doorway of the garage with its **X** axis pointed out toward the street.
+* It is convenient for the robot's **Home** position to be centered in the doorway of the garage with its **X** axis pointed out toward the street.
 * After the robot leaves its Home position, it's own **Local** coordinate frame moves with it, while its **World** coordinate frame stays put.
 
-### Transforming from Lat/Lon to Easting/Northing to X/Y Reference Frame
+### Transforming from Lat/Lon --> Easting/Northing --> X/Y Reference Frame
 
 * **GPS** technology is wonderful for allowing our robot to figure out where it is, but we have to do a couple of transformations to get our desired X, Y coordinates in meters.
-    1. First we declare the Latitude / Longitude of our chosen **Home** poistion to be our **reference** coordinates. All other Lat/Lon coordinates are considered to be relative to the coordinates of our Home positon.
+    1. First we declare the Latitude / Longitude of our chosen **Home** postion to be our **reference** coordinates. All other Lat/Lon coordinates are considered to be relative to the coordinates of our Home positon.
     2. With the Home position as the origin, we can come up with a 2D frame which looks like a normal map, with East-West direction along the horizontal axis and North-South direction along the vertical direction.
         * A **Northing** value (meters) is calculated from the latitude of any other location.
             * Measuring the Earth's circumference **C** in a longitudinal direction allows us to come up with a pretty simple relationship between latitude and Northing distance that holds true everywhere.
@@ -62,9 +60,14 @@
 
 ## Test drive to a goal point
 
-![Simple triangular loop in driveway](imgs/driveway_loop.png)
+![Route](imgs/route.png)
 
-* The file [drive_trike.py](Pico_code/drive_trike.py) steers from point 0 (Origin or Home) to a goal point roughly 8 meters away. Driving from the orgin to the N corner of the driveway, the GPS values "bobble" around so much, that it causes the steering to behave very erratically. The robot uses the GPS values to compute its current position, then uses this to find the angle to the goal. At first, I thought this problem could be mitigated by choosing a goal point farther away, but as the robot gets closer to the goal the problem would be the same.
+* The file [simple_loop.py](Pico_code/simple_loop.py) uses a simple steering algorithm to bring the robot's *heading* into alignment with the calculated *course* from its current x, y location to the x, y location of the goal point.
+* Start from Home point (0) in the street near the center of my drive
+    * Lat, Lon = 28.924720, -81.969660
+* Drive (due West) to Goal point, located 12 m West of Home
+    * Lat, Lon = 28.924720, -81.969780
+* Upon reaching Goal, exit program
 
 ## Online research: "Path following & steering"
 * This [path folowing video tutorial](https://www.youtube.com/watch?v=2qGsBClh3hE) shows (at 7:00) a nice animation of a path following algorithm credited to [Craig Reynolds](https://www.red3d.com/cwr/steer/)
