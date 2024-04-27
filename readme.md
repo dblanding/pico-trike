@@ -56,20 +56,26 @@
             * Measuring the Earth's circumference **C** in a longitudinal direction allows us to come up with a pretty simple relationship between latitude and Northing distance that holds true everywhere.
         * An **Easting** value (meters) is calculated from the longitude of any other location.
             * This isn't as simple. It also depends on  your latitude. At the equator, you would have to travel a great distance East or West to go 360 degrees and get back to where you started, but if you are near one of the poles, you only have to travel a much shorter distance to get back to your starting point. So you have to know your latitude in order to know the distance around the world in the E/W direction.
-    3. Finally, we get our desired X/Y coordinate frame by rotating the Easting/Northing map 148 degrees CCW about the origin..
+    3. Finally, set the X/Y coordinate frame at the desired rotation. Zero rotation would align the X-axis to the East (Y-axis to the North). If it is desired to have the X-axis square to the face of the garage as shown above, the Easting/Northing map would need to rotate 148 degrees CCW about the origin.
 
 ## Test drive to a goal point
 
 ![Route](imgs/route.png)
 
-* The file [simple_loop.py](Pico_code/simple_loop.py) uses a simple steering algorithm to bring the robot's *heading* into alignment with the calculated *course* from its current x, y location to the x, y location of the goal point.
-* Start from Home point (0) in the street near the center of my drive
-    * Lat, Lon = 28.924720, -81.969660
-* Drive (due West) to Goal point, located 12 m West of Home
-    * Lat, Lon = 28.924720, -81.969780
-* Upon reaching Goal, exit program
+## Now let's try a test drive from point 0 to a goal point, 12 m due west.
 
-## Online research: "Path following & steering"
+* Point 0 is at: Lat, Lon = 28.924720, -81.969660
+* The target point is at: Lat, Lon = 28.924720, -81.969780
+* The file [simple_loop.py](Pico_code/simple_loop.py) tries to accomplish this.
+    * Initially, the robot is set up at point 0, aimed at the goal point, 12 m away to the west.
+    * As the robot drives:
+        * It collects gps data from which it calculates its current X, Y coodinates
+        * From it current position, it calculates the course to the goal.
+        * It then steers using a simple algorithmwhich tries to bring the robot's *heading* into alignment with the calculated *course* to the goal point.
+* Upon reaching Goal, exit program
+* I am thnking that if this works adequately, there is no neeed for any greater sophistication.
+* If it doesn't work OK, well I can always do some online research to try to cone up with a better algorithm.
+## Online research: "Path following & steering"s
 * This [path folowing video tutorial](https://www.youtube.com/watch?v=2qGsBClh3hE) shows (at 7:00) a nice animation of a path following algorithm credited to [Craig Reynolds](https://www.red3d.com/cwr/steer/)
 
 ![Path Following Animation](imgs/path-following.png)
