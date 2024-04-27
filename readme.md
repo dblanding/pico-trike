@@ -1,5 +1,10 @@
-# Solar Trike *Earth Rover* (with R/C steering control)
+# Solar Powered *Outdoor* Trike
 * Locomotion powered *solely* by *Solar*
+* Steering control optionally using
+    * R/C (operator controlled) or
+    * Programmed using GPS & IMU
+        * GPS informs X, Y postion
+        * IMU informs $\theta$-Z orientation
 
 ![R/C Solar Trike](imgs/solar_trike.jpg)
 
