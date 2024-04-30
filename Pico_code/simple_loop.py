@@ -1,31 +1,32 @@
 # simple_loop.py
 """
-At Power-up, Trike should be positioned square to house, facing street.
-This sets the IMU (yaw=0) along the X-axis
-Next, press button to begin the loop
-Once the LED starts to blink:
-    3D GPS data available
-    Data recording begins
-    Steers toward the target
-    When arrived at target X-coord value:
-        Program exits
-        Data collection stops
-
-But the Trike keeps going because it is solar powered
-So you have to grab it (or give it some shade)
+1. At Power-up, Trike is at garage door, square to house, facing street.
+    This sets the IMU (yaw=0) along the X-axis
+2. Next, press button to enter the main loop
+    When the LED starts to blink:
+        3D GPS data is available
+        Target '0' is set as Home
+        Data recording begins
+        Steers toward target '0'
+        When arrived at target '0':
+            Steer toward next target
+            When arrived at next target:
+                Cut off power to motor
+                Exit program
 """
 
-from math import atan2, pi
+from math import atan2, pi, sqrt
 from machine import Pin, PWM, UART
 import utime
 from bno08x_rvc import BNO08x_RVC, RVCReadTimeoutError
 from micropyGPS import MicropyGPS
 from latlon2xy import LatLon2XY
 
-XH, YH = 0, 0  # X, Y coords of HOME
-XT, YT = 12, 0  # X, Y coordinates of target
-HOME_LAT = 28.924700
-HOME_LON = -81.969660
+waypoints_lat_lon = [(28.924715, -81.969655),
+                     (28.924715, -81.969780),
+                     ]
+LAT_0, LON_0 = waypoints_lat_lon[0]  # Home coords
+GOAL_REACHED = False
 HOME_ANGLE = 148  # Angle (deg) from TRUE EAST to X axis of X,Y frame
 DATAFILENAME = 'data0.txt'
 INITIALIZED = False  # HOME pose initialized in X,Y frame?
@@ -39,7 +40,7 @@ MAX_ANGLE = 20  # degrees
 SERVO_GAIN = (MAX - MID) / 20
 GOAL_DIST = 2  # radius (m) considered to be "arrived" at goal
 
-# set up button to trigger program exit
+# set up button
 button = Pin(5, Pin.IN, Pin.PULL_UP)
 
 # Set up LED indicator -> printing data
@@ -57,6 +58,16 @@ rvc = BNO08x_RVC(uart0)
 # Set up pin for steering servo
 pwm = PWM(Pin(15))
 pwm.freq(50)
+
+# Set up relay for motor (N.O.)
+relay = Pin(18, Pin.OUT)
+relay.value(0)
+
+# Initialize X, Y coordinate frame and
+# Translate waypoints from Lat/Lon to X/Y coordinates
+cf = LatLon2XY(LAT_0, LON_0, HOME_ANGLE)
+waypoints_x_y = [cf.latlon_to_xy(lat, lon)
+                 for lat, lon in waypoints_lat_lon]
 
 def convert_coordinates(sections):
     if sections[0] == 0:  # sections[0] contains the degrees
@@ -79,7 +90,7 @@ def record(line):
         file.write(line)
 
 def steer(angle):
-    """Steer left for Neg values, right for positive values"""
+    """Steer left for negative values, right for positive values"""
     if angle > MAX_ANGLE:
         angle = MAX_ANGLE
     elif angle < -MAX_ANGLE:
@@ -95,7 +106,7 @@ while True:
     utime.sleep(0.1)
 utime.sleep(1)
 
-x = 0
+curr_leg = 0
 loop_count = 0
 while True:
     loop_count += 1
@@ -104,9 +115,17 @@ while True:
     if button.value() == 0:
         print("Exit button pressed")
         break
-    if x > XT:
-        print(f"Reached goal: x = {x} m")
-        break
+
+    # Check if goal reached for this leg
+    if GOAL_REACHED:
+        print(f"Leg {curr_leg + 1} complete")
+        curr_leg += 1
+        if curr_leg >= len(waypoints_x_y):
+            print("Final leg of trip complete")
+            break
+        else:
+            print("Proceed to next leg")
+            GOAL_REACHED = False
 
     # Get heading value (degrees)
     try:
@@ -122,39 +141,48 @@ while True:
         led.value(0)  # Leave LED on until 10th loop cycle
 
     if loop_count == 100:  # Everything else can go in the slow loop
-        # Reset loop_count
-        loop_count = 0
+        
+        loop_count = 0  # Reset loop_count
+
+        x_goal, y_goal = waypoints_x_y[curr_leg]
 
         # Update GPS data
         my_sentence = (str(uart1.readline()))[1:]
         for word in my_sentence:
             gps.update(word)
 
-        # Collect GPS data
         if gps.fix_type == 3:
+
+            # Turn on the motor
+            relay.value(1)
+
+            # Collect GPS data
             lat = convert_coordinates(gps.latitude)
             lon = convert_coordinates(gps.longitude)
-            hr, min, sec = gps.timestamp
-            time = f"{hr}:{min}:{sec}"
+            hr, mn, sec = gps.timestamp
+            time = f"{hr}:{mn}:{sec}"
             day, mon, yr = gps.date
             date = f"{mon}/{day}/{yr}"
 
             if not INITIALIZED:
-                # Initialize X, Y coordinate frame
-                cf = LatLon2XY(HOME_LAT, HOME_LON, HOME_ANGLE)
-                INITIALIZED = True
-                x, y = 0, 0
                 record(date)
-                table_header = "Time, X (m), Y (m), Steer (deg)"
-                print(table_header)
-                record(table_header)
-            else:
-                x, y = cf.latlon_to_xy(lat, lon)
+                data_header = "Time, X (m), Y (m), Steer (deg)"
+                print(data_header)
+                record(data_header)
+                INITIALIZED = True
 
-            # Steer to align heading w/ course
-            crs_deg = atan2((0 - y), (12 - x)) * 180 / pi  # course to target
-            steer_deg = (hdg_deg - crs_deg) * STEERING_GAIN  # steering angle (deg)
-            steer(steer_deg)
+            x, y = cf.latlon_to_xy(lat, lon)  # current position
+
+            # Check distance to goal
+            dist = sqrt((x_goal - x)**2 + (y_goal - y)**2)
+            if dist < GOAL_DIST:
+                GOAL_REACHED = True
+
+            # Steer to align heading w/ course to goal
+            if not GOAL_REACHED:
+                crs_deg = atan2((y_goal - y), (x_goal - x)) * 180 / pi  # course to goal
+                steer_deg = (hdg_deg - crs_deg) * STEERING_GAIN  # steering angle (deg)
+                steer(steer_deg)
 
             # print & record data
             text_data = f"{time}, {x}, {y}, {steer_deg}"
@@ -163,6 +191,10 @@ while True:
 
             # Turn on LED to signal successful data recording
             led.value(1)
+        else:
+            # Stop if no 3D gps reading
+            relay.value(0)
 
+relay.value(0)
 led.value(0)
 steer(0)
