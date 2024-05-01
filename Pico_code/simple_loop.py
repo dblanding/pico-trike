@@ -1,18 +1,16 @@
 # simple_loop.py
 """
-1. At Power-up, Trike is at garage door, square to house, facing street.
+1. At Power-up, set trike at garage door, square to house, facing street.
     This sets the IMU (yaw=0) along the X-axis
 2. Next, press button to enter the main loop
     When the LED starts to blink:
         3D GPS data is available
-        Target '0' is set as Home
+        Target waypoints[0] is set as X,Y origin
         Data recording begins
-        Steers toward target '0'
-        When arrived at target '0':
-            Steer toward next target
-            When arrived at next target:
-                Cut off power to motor
-                Exit program
+        Steers to each target in waypoints sequentially
+        Once it arrives at final target:
+            Cut off power to motor
+            Exit program
 """
 
 from math import atan2, pi, sqrt
@@ -119,12 +117,15 @@ while True:
     # Check if goal reached for this leg
     if GOAL_REACHED:
         print(f"Leg {curr_leg + 1} complete")
+        record(f"Leg {curr_leg + 1} complete")
         curr_leg += 1
         if curr_leg >= len(waypoints_x_y):
             print("Final leg of trip complete")
+            record("Final leg of trip complete")
             break
         else:
             print("Proceed to next leg")
+            record("Proceed to next leg")
             GOAL_REACHED = False
 
     # Get heading value (degrees)
@@ -163,10 +164,11 @@ while True:
             time = f"{hr}:{mn}:{sec}"
             day, mon, yr = gps.date
             date = f"{mon}/{day}/{yr}"
+            sats = gps.satellites_used
 
             if not INITIALIZED:
                 record(date)
-                data_header = "Time, X (m), Y (m), Steer (deg)"
+                data_header = "Time, X (m), Y (m), Heading (deg), Dist (m), Course (deg), Satellites"
                 print(data_header)
                 record(data_header)
                 INITIALIZED = True
@@ -185,7 +187,7 @@ while True:
                 steer(steer_deg)
 
             # print & record data
-            text_data = f"{time}, {x}, {y}, {steer_deg}"
+            text_data = f"{time}, {x}, {y}, {hdg_deg}, {dist}, {crs_deg}, {sats}"
             print(text_data)
             record(text_data)
 
