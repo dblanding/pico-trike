@@ -20,8 +20,8 @@ from bno08x_rvc import BNO08x_RVC, RVCReadTimeoutError
 from micropyGPS import MicropyGPS
 from latlon2xy import LatLon2XY
 
-waypoints_lat_lon = [(28.924715, -81.969655),
-                     (28.924715, -81.969780),
+waypoints_lat_lon = [(28.924725, -81.969655),
+                     (28.924725, -81.969780),
                      ]
 LAT_0, LON_0 = waypoints_lat_lon[0]  # Home coords
 GOAL_REACHED = False
