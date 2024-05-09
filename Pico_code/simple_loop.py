@@ -44,7 +44,7 @@ GOAL_REACHED = False
 HOME_ANGLE = 148  # Angle (deg) from TRUE EAST to X axis of X,Y frame
 DATAFILENAME = 'data0.txt'
 INITIALIZED = False  # HOME pose initialized in X,Y frame?
-STEERING_GAIN = 0.6
+STEERING_GAIN = -0.6
 
 # PWM values for servo
 MIN = 1_200_000
@@ -103,6 +103,17 @@ def record(line):
     with open(DATAFILENAME, 'a') as file:
         file.write(line)
 
+def calc_steer(course, heading):
+    """Calculate steering (deg) to align heading (deg) to desired course (deg)"""
+    # Calculate relative bearing of goal
+    rel_brg = course - heading
+    # Must fix if crs and hdg are near 180 and of opposite sign 
+    if rel_brg > 180:
+        rel_brg -= 360
+    elif rel_brg < -180:
+        rel_brg += 360
+    return rel_brg * STEERING_GAIN
+    
 def steer(angle):
     """Steer left for negative values, right for positive values"""
     if angle > MAX_ANGLE:
@@ -203,7 +214,7 @@ while True:
             # Steer to align heading w/ course to goal
             if not GOAL_REACHED:
                 crs_deg = atan2((y_goal - y), (x_goal - x)) * 180 / pi  # course to goal
-                steer_deg = (hdg_deg - crs_deg) * STEERING_GAIN  # steering angle (deg)
+                steer_deg = calc_steer(hdg_deg - crs_deg)  # steering angle (deg)
                 steer(steer_deg)
 
             # print & record data
