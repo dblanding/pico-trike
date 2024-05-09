@@ -19,10 +19,26 @@ import utime
 from bno08x_rvc import BNO08x_RVC, RVCReadTimeoutError
 from micropyGPS import MicropyGPS
 from latlon2xy import LatLon2XY
-
+"""
 waypoints_lat_lon = [(28.924725, -81.969655),
                      (28.924725, -81.969780),
+                     (28.924788, -81.969868),
+                     (28.924841, -81.969847),
                      ]
+"""
+# Waypoints for CCW trip around circle
+waypoints_lat_lon = [(28.924724, -81.969674),
+                     (28.924833, -81.969681),
+                     (28.924867, -81.969740),
+                     (28.924844, -81.969819),
+                     (28.924789, -81.969854),
+                     (28.924728, -81.969806),
+                     (28.924720, -81.969723),
+                     (28.924726, -81.969680),
+                     (28.924689, -81.969623),
+                     ]
+
+
 LAT_0, LON_0 = waypoints_lat_lon[0]  # Home coords
 GOAL_REACHED = False
 HOME_ANGLE = 148  # Angle (deg) from TRUE EAST to X axis of X,Y frame
@@ -96,16 +112,20 @@ def steer(angle):
     pwm_value = int(MID - (SERVO_GAIN * angle))
     pwm.duty_ns(pwm_value)
 
-# Wait for button press to start
+# Wait for button press to start main loop
 while True:
     if button.value() == 0:
-        print("Start button pressed")
         break
     utime.sleep(0.1)
+    led.toggle()
 utime.sleep(1)
 
+# Goal coordinates for first leg
 curr_leg = 0
+x_goal, y_goal = waypoints_x_y[curr_leg]
+# record(f"First leg goal coordinates:, {x_goal}, {y_goal}")
 loop_count = 0
+
 while True:
     loop_count += 1
 
@@ -116,17 +136,18 @@ while True:
 
     # Check if goal reached for this leg
     if GOAL_REACHED:
-        print(f"Leg {curr_leg + 1} complete")
         record(f"Leg {curr_leg + 1} complete")
         curr_leg += 1
         if curr_leg >= len(waypoints_x_y):
-            print("Final leg of trip complete")
             record("Final leg of trip complete")
             break
         else:
-            print("Proceed to next leg")
             record("Proceed to next leg")
             GOAL_REACHED = False
+        # New goal coordinates
+        x_goal, y_goal = waypoints_x_y[curr_leg]
+        record(f"Next leg goal coordinates:, {x_goal}, {y_goal}")
+        
 
     # Get heading value (degrees)
     try:
@@ -144,8 +165,6 @@ while True:
     if loop_count == 100:  # Everything else can go in the slow loop
         
         loop_count = 0  # Reset loop_count
-
-        x_goal, y_goal = waypoints_x_y[curr_leg]
 
         # Update GPS data
         my_sentence = (str(uart1.readline()))[1:]
@@ -168,10 +187,11 @@ while True:
 
             if not INITIALIZED:
                 record(date)
-                data_header = "Time, X (m), Y (m), Heading (deg), Dist (m), Course (deg), Satellites"
-                print(data_header)
+                record(f"First leg goal coordinates:, {x_goal}, {y_goal}")
+                data_header = f"{date} Time, X (m), Y (m), Heading (deg), Dist (m), Course (deg), Steer (deg)"
                 record(data_header)
                 INITIALIZED = True
+                sats_initial = sats
 
             x, y = cf.latlon_to_xy(lat, lon)  # current position
 
@@ -187,8 +207,7 @@ while True:
                 steer(steer_deg)
 
             # print & record data
-            text_data = f"{time}, {x}, {y}, {hdg_deg}, {dist}, {crs_deg}, {sats}"
-            print(text_data)
+            text_data = f"{time}, {x}, {y}, {hdg_deg}, {dist}, {crs_deg}, {steer_deg}"
             record(text_data)
 
             # Turn on LED to signal successful data recording
@@ -200,3 +219,5 @@ while True:
 relay.value(0)
 led.value(0)
 steer(0)
+record(f"Satellites Initial:, {sats_initial}")
+record(f"Satellites Final:, {sats}")
